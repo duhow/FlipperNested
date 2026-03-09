@@ -2,6 +2,11 @@
 #include <lib/nfc/protocols/mf_classic/mf_classic.h>
 #include "stddef.h"
 
+typedef struct {
+    uint32_t odd;
+    uint32_t even;
+} Crypto1;
+
 #define LF_POLY_ODD (0x29CE5C)
 #define LF_POLY_EVEN (0x870804)
 

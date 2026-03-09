@@ -1,5 +1,6 @@
 #pragma once
 
+#include <furi_hal_nfc.h>
 #include <lib/nfc/protocols/mf_classic/mf_classic.h>
 #include "../crypto1/crypto1.h"
 

@@ -286,7 +286,7 @@ uint32_t mifare_nested_worker_predict_delay(
     uint32_t tries,
     MifareNestedWorker* mifare_nested_worker) {
     uint32_t cuid = 0;
-    Crypto1* crypto = malloc(sizeof(Crypto1));
+    NestedCrypto1* crypto = malloc(sizeof(NestedCrypto1));
     uint32_t nt1, nt2, i = 0, previous = 0, prng_delay = 0, zero_prng_value = 65565, repeat = 0;
 
     if(tries > 25) {
@@ -314,10 +314,10 @@ uint32_t mifare_nested_worker_predict_delay(
         mifare_classic_authex(crypto, tx_rx, cuid, blockNo, keyType, ui64Key, true, &nt2);
 
         // Searching for delay, where PRNG will be near 800
-        uint32_t nttmp = prng_successor(nt1, 100);
+        uint32_t nttmp = nested_prng_successor(nt1, 100);
 
         for(i = 101; i < 65565; i++) {
-            nttmp = prng_successor(nttmp, 1);
+            nttmp = nested_prng_successor(nttmp, 1);
             if(nttmp == nt2) break;
         }
 
@@ -379,10 +379,10 @@ uint32_t mifare_nested_worker_predict_delay(
             mifare_classic_authex(crypto, tx_rx, cuid, blockNo, keyType, ui64Key, true, &nt2);
 
             // Searching for delay, where PRNG will be near 800
-            uint32_t nttmp = prng_successor(nt1, 0);
+            uint32_t nttmp = nested_prng_successor(nt1, 0);
 
             for(i = 1; i < 65565; i++) {
-                nttmp = prng_successor(nttmp, 1);
+                nttmp = nested_prng_successor(nttmp, 1);
                 if(nttmp == nt2) break;
             }
 

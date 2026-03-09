@@ -1,4 +1,6 @@
-#include "stdint.h"
+#pragma once
+
+#include <stdint.h>
 
 uint8_t oddparity8(const uint8_t x);
 uint8_t evenparity8(const uint8_t x);

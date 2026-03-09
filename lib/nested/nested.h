@@ -1,7 +1,7 @@
 #pragma once
 
 #include <lib/nfc/protocols/mf_classic/mf_classic.h>
-#include <lib/nfc/protocols/crypto1.h>
+#include "../crypto1/crypto1.h"
 
 #include <stddef.h>
 #include <storage/storage.h>

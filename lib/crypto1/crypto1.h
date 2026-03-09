@@ -1,6 +1,5 @@
 #include "../../lib/parity/parity.h"
 #include <lib/nfc/protocols/mf_classic/mf_classic.h>
-#include <lib/nfc/protocols/crypto1.h>
 #include "stddef.h"
 
 #define LF_POLY_ODD (0x29CE5C)

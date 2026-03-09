@@ -93,7 +93,6 @@ void mifare_nested_scene_collecting_on_enter(void* context) {
     mifare_nested_worker_start(
         mifare_nested->worker,
         mifare_nested->collecting_type,
-        &mifare_nested->nfc_dev->dev_data,
         mifare_nested_collecting_worker_callback,
         mifare_nested);
 

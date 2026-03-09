@@ -1,12 +1,52 @@
 #pragma once
 
-#include <lib/nfc/protocols/nfc_util.h>
-#include <lib/nfc/protocols/mifare_classic.h>
-#include <lib/nfc/protocols/crypto1.h>
+#include <furi_hal_nfc.h>
+#include <lib/nfc/protocols/mf_classic/mf_classic.h>
+#include "../crypto1/crypto1.h"
 
+#include <stddef.h>
 #include <storage/storage.h>
 #include <stream/stream.h>
 #include <stream/buffered_file_stream.h>
+
+typedef enum {
+    FuriHalNfcTxRxTypeRaw,
+    FuriHalNfcTxRxTypeRxNoCrc,
+} FuriHalNfcTxRxType;
+
+typedef struct {
+    uint8_t tx_data[256];
+    uint8_t rx_data[256];
+    uint8_t tx_parity[32];
+    uint8_t rx_parity[32];
+    size_t tx_bits;
+    size_t rx_bits;
+    FuriHalNfcTxRxType tx_rx_type;
+} FuriHalNfcTxRxContext;
+
+typedef struct {
+    uint8_t uid[10];
+    uint8_t uid_len;
+    uint8_t atqa[2];
+    uint8_t sak;
+    uint32_t cuid;
+} FuriHalNfcDevData;
+
+bool furi_hal_nfc_activate_nfca(uint32_t timeout_ms, uint32_t* cuid);
+
+static inline uint64_t bytes2num(const uint8_t* bytes, size_t len) {
+    uint64_t num = 0;
+    for(size_t i = 0; i < len; i++) {
+        num = (num << 8) | bytes[i];
+    }
+    return num;
+}
+
+static inline void num2bytes(uint64_t num, size_t len, uint8_t* bytes) {
+    for(size_t i = 0; i < len; i++) {
+        bytes[len - 1 - i] = (num >> (8 * i)) & 0xFF;
+    }
+}
 
 typedef enum {
     MifareNestedNonceNoTag,
@@ -101,10 +141,10 @@ NestedCheckKeyResult nested_check_key(
 
 bool nested_check_block(FuriHalNfcTxRxContext* tx_rx, uint8_t blockNo, uint8_t keyType);
 
-void nested_get_data();
+void nested_get_data(FuriHalNfcDevData* dev_data);
 
 bool mifare_classic_authex(
-    Crypto1* crypto,
+    NestedCrypto1* crypto,
     FuriHalNfcTxRxContext* tx_rx,
     uint32_t uid,
     uint32_t blockNo,

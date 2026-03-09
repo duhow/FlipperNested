@@ -7,8 +7,6 @@
 struct MifareNestedWorker {
     FuriThread* thread;
 
-    NfcDeviceData* dev_data;
-
     MifareNestedWorkerCallback callback;
     MifareNested* context;
 

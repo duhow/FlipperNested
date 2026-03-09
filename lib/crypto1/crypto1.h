@@ -2,7 +2,7 @@
 
 #include <stddef.h>
 
-#include <lib/parity/parity.h>
+#include "../../lib/parity/parity.h"
 #include <lib/nfc/protocols/mf_classic/mf_classic.h>
 
 typedef struct {

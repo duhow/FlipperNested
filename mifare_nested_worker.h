@@ -55,7 +55,6 @@ void mifare_nested_worker_stop(MifareNestedWorker* mifare_nested_worker);
 void mifare_nested_worker_start(
     MifareNestedWorker* mifare_nested_worker,
     MifareNestedWorkerState state,
-    NfcDeviceData* dev_data,
     MifareNestedWorkerCallback callback,
     void* context);
 

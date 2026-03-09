@@ -55,7 +55,6 @@ void mifare_nested_scene_check_keys_on_enter(void* context) {
     mifare_nested_worker_start(
         mifare_nested->worker,
         MifareNestedWorkerStateValidating,
-        &mifare_nested->nfc_dev->dev_data,
         mifare_nested_check_keys_worker_callback,
         mifare_nested);
 

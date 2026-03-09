@@ -16,6 +16,17 @@
 static uint16_t sums[] =
     {0, 32, 56, 64, 80, 96, 104, 112, 120, 128, 136, 144, 152, 160, 176, 192, 200, 224, 256};
 
+static MfClassicData* mifare_nested_worker_alloc_mf_data(const NfcDevice* dev) {
+    const MfClassicData* src = (const MfClassicData*)nfc_device_get_data(dev, NfcProtocolMfClassic);
+    if(!src) return NULL;
+
+    MfClassicData* mf_data = malloc(sizeof(MfClassicData));
+    if(!mf_data) return NULL;
+
+    *mf_data = *src;
+    return mf_data;
+}
+
 void mifare_nested_worker_change_state(
     MifareNestedWorker* mifare_nested_worker,
     MifareNestedWorkerState state) {
@@ -56,15 +67,12 @@ void mifare_nested_worker_stop(MifareNestedWorker* mifare_nested_worker) {
 void mifare_nested_worker_start(
     MifareNestedWorker* mifare_nested_worker,
     MifareNestedWorkerState state,
-    NfcDeviceData* dev_data,
     MifareNestedWorkerCallback callback,
     void* context) {
     furi_assert(mifare_nested_worker);
-    furi_assert(dev_data);
 
     mifare_nested_worker->callback = callback;
     mifare_nested_worker->context = context;
-    mifare_nested_worker->dev_data = dev_data;
     mifare_nested_worker_change_state(mifare_nested_worker, state);
     furi_thread_start(mifare_nested_worker->thread);
 }
@@ -647,9 +655,14 @@ void mifare_nested_worker_check(MifareNestedWorker* mifare_nested_worker) {
     while(mifare_nested_worker->state == MifareNestedWorkerStateCheck) {
         FuriHalNfcTxRxContext tx_rx = {};
         NfcDevice* dev = mifare_nested_worker->context->nfc_dev;
-        MfClassicData* mf_data = &dev->dev_data.mf_classic_data;
+        MfClassicData* mf_data = mifare_nested_worker_alloc_mf_data(dev);
         FuriHalNfcDevData data = {};
         MifareNestedNonceType type = MifareNestedNonceNoTag;
+        if(!mf_data) {
+            mifare_nested_worker->callback(
+                MifareNestedWorkerEventNoTagDetected, mifare_nested_worker->context);
+            break;
+        }
         nested_get_data(&data);
 
         if(mifare_nested_worker_read_key_cache(&data, mf_data)) {
@@ -676,6 +689,7 @@ void mifare_nested_worker_check(MifareNestedWorker* mifare_nested_worker) {
             mifare_nested_worker->callback(
                 MifareNestedWorkerEventCollecting, mifare_nested_worker->context);
 
+            free(mf_data);
             break;
         } else if(type == MifareNestedNonceWeak) {
             mifare_nested_worker->context->collecting_type = MifareNestedWorkerStateCollecting;
@@ -683,6 +697,7 @@ void mifare_nested_worker_check(MifareNestedWorker* mifare_nested_worker) {
             mifare_nested_worker->callback(
                 MifareNestedWorkerEventCollecting, mifare_nested_worker->context);
 
+            free(mf_data);
             break;
         } else if(type == MifareNestedNonceHard) {
             mifare_nested_worker->context->collecting_type = MifareNestedWorkerStateCollectingHard;
@@ -690,10 +705,12 @@ void mifare_nested_worker_check(MifareNestedWorker* mifare_nested_worker) {
             mifare_nested_worker->callback(
                 MifareNestedWorkerEventCollecting, mifare_nested_worker->context);
 
+            free(mf_data);
             break;
         }
 
         furi_delay_ms(250);
+        free(mf_data);
     }
 
     nfc_deactivate();
@@ -703,7 +720,12 @@ void mifare_nested_worker_collect_nonces_static(MifareNestedWorker* mifare_neste
     NonceList_t nonces;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     NfcDevice* dev = mifare_nested_worker->context->nfc_dev;
-    MfClassicData* mf_data = &dev->dev_data.mf_classic_data;
+    MfClassicData* mf_data = mifare_nested_worker_alloc_mf_data(dev);
+    if(!mf_data) {
+        mifare_nested_worker->callback(
+            MifareNestedWorkerEventNoTagDetected, mifare_nested_worker->context);
+        return;
+    }
     FuriString* folder_path = furi_string_alloc();
     FuriHalNfcDevData data = {};
     nested_get_data(&data);
@@ -866,7 +888,12 @@ void mifare_nested_worker_collect_nonces_hard(MifareNestedWorker* mifare_nested_
     NonceList_t nonces;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     NfcDevice* dev = mifare_nested_worker->context->nfc_dev;
-    MfClassicData* mf_data = &dev->dev_data.mf_classic_data;
+    MfClassicData* mf_data = mifare_nested_worker_alloc_mf_data(dev);
+    if(!mf_data) {
+        mifare_nested_worker->callback(
+            MifareNestedWorkerEventNoTagDetected, mifare_nested_worker->context);
+        return;
+    }
     FuriString* folder_path = furi_string_alloc();
     FuriHalNfcDevData data = {};
     nested_get_data(&data);
@@ -1115,7 +1142,12 @@ void mifare_nested_worker_collect_nonces(MifareNestedWorker* mifare_nested_worke
     NonceList_t nonces;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     NfcDevice* dev = mifare_nested_worker->context->nfc_dev;
-    MfClassicData* mf_data = &dev->dev_data.mf_classic_data;
+    MfClassicData* mf_data = mifare_nested_worker_alloc_mf_data(dev);
+    if(!mf_data) {
+        mifare_nested_worker->callback(
+            MifareNestedWorkerEventNoTagDetected, mifare_nested_worker->context);
+        return;
+    }
     FuriString* folder_path = furi_string_alloc();
     FuriHalNfcDevData data = {};
     nested_get_data(&data);

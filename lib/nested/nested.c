@@ -5,6 +5,20 @@
 #include "../../lib/crypto1/crypto1.h"
 #define TAG "Nested"
 
+static inline uint64_t bytes2num(const uint8_t* bytes, size_t len) {
+    uint64_t num = 0;
+    for(size_t i = 0; i < len; i++) {
+        num = (num << 8) | bytes[i];
+    }
+    return num;
+}
+
+static inline void num2bytes(uint64_t num, size_t len, uint8_t* bytes) {
+    for(size_t i = 0; i < len; i++) {
+        bytes[len - 1 - i] = (num >> (8 * i)) & 0xFF;
+    }
+}
+
 uint16_t nfca_get_crc16(uint8_t* buff, uint16_t len) {
     uint16_t crc = 0x6363; // NFCA_CRC_INIT
     uint8_t byte = 0;
@@ -76,7 +90,7 @@ bool mifare_classic_authex(
     uint8_t nr[4];
 
     // "random" reader nonce:
-    nfc_util_num2bytes(prng_successor(0, 32), 4, nr); // DWT->CYCCNT
+    num2bytes(prng_successor(0, 32), 4, nr); // DWT->CYCCNT
 
     // Transmit MIFARE_CLASSIC_AUTH
     if(!mifare_sendcmd_short(crypto, tx_rx, isNested, 0x60 + (keyType & 0x01), blockNo)) {
@@ -86,7 +100,7 @@ bool mifare_classic_authex(
     memset(tx_rx->tx_data, 0, sizeof(tx_rx->tx_data));
     memset(tx_rx->tx_parity, 0, sizeof(tx_rx->tx_parity));
 
-    nt = (uint32_t)nfc_util_bytes2num(tx_rx->rx_data, 4);
+    nt = (uint32_t)bytes2num(tx_rx->rx_data, 4);
 
     if(isNested) crypto1_reset(crypto); // deinit
 
@@ -125,7 +139,7 @@ bool mifare_classic_authex(
         return false;
     };
 
-    uint32_t answer = (uint32_t)nfc_util_bytes2num(tx_rx->rx_data, 4);
+    uint32_t answer = (uint32_t)bytes2num(tx_rx->rx_data, 4);
 
     ntpp = prng_successor(nt, 32) ^ crypto1_word(crypto, 0, 0);
 
@@ -197,7 +211,7 @@ MifareNestedNonceType nested_check_nonce_type(FuriHalNfcTxRxContext* tx_rx, uint
             continue;
         };
 
-        uint32_t nt = (uint32_t)nfc_util_bytes2num(tx_rx->rx_data, 4);
+        uint32_t nt = (uint32_t)bytes2num(tx_rx->rx_data, 4);
         if(nt == 0) continue;
         if(!validate_prng_nonce(nt)) hardNonces++;
         nonces[i] = nt;
@@ -273,7 +287,7 @@ struct nonce_info_static nested_static_nonce_attack(
         return r;
     };
 
-    uint32_t nt2 = nfc_util_bytes2num(tx_rx->rx_data, 4);
+    uint32_t nt2 = bytes2num(tx_rx->rx_data, 4);
     r.target_ks[0] = nt2 ^ r.target_nt[0];
 
     nfc_activate();
@@ -298,7 +312,7 @@ struct nonce_info_static nested_static_nonce_attack(
         return r;
     };
 
-    uint32_t nt3 = (uint32_t)nfc_util_bytes2num(tx_rx->rx_data, 4);
+    uint32_t nt3 = (uint32_t)bytes2num(tx_rx->rx_data, 4);
 
     r.target_ks[1] = nt3 ^ r.target_nt[1];
     r.full = true;
@@ -498,7 +512,7 @@ struct nonce_info nested_attack(
 
             if(!success) continue;
 
-            nt2 = nfc_util_bytes2num(tx_rx->rx_data, 4);
+            nt2 = bytes2num(tx_rx->rx_data, 4);
 
             // Parity validity check
             for(j = 0; j < 4; j++) {
@@ -595,7 +609,7 @@ struct nonce_info_hard nested_hard_nonce_attack(
         if(!mifare_sendcmd_short(crypto, tx_rx, true, 0x60 + (targetKeyType & 0x01), targetBlockNo))
             continue;
 
-        uint64_t nt = nfc_util_bytes2num(tx_rx->rx_data, 4);
+        uint64_t nt = bytes2num(tx_rx->rx_data, 4);
 
         for(uint32_t j = 0; j < 4; j++) {
             par_array[j] =

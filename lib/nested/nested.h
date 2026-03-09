@@ -1,7 +1,6 @@
 #pragma once
 
-#include <lib/nfc/protocols/nfc_util.h>
-#include <lib/nfc/protocols/mifare_classic.h>
+#include <lib/nfc/protocols/mf_classic/mf_classic.h>
 #include <lib/nfc/protocols/crypto1.h>
 
 #include <storage/storage.h>

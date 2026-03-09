@@ -3,9 +3,24 @@
 #include <lib/nfc/protocols/mf_classic/mf_classic.h>
 #include <lib/nfc/protocols/crypto1.h>
 
+#include <stddef.h>
 #include <storage/storage.h>
 #include <stream/stream.h>
 #include <stream/buffered_file_stream.h>
+
+static inline uint64_t bytes2num(const uint8_t* bytes, size_t len) {
+    uint64_t num = 0;
+    for(size_t i = 0; i < len; i++) {
+        num = (num << 8) | bytes[i];
+    }
+    return num;
+}
+
+static inline void num2bytes(uint64_t num, size_t len, uint8_t* bytes) {
+    for(size_t i = 0; i < len; i++) {
+        bytes[len - 1 - i] = (num >> (8 * i)) & 0xFF;
+    }
+}
 
 typedef enum {
     MifareNestedNonceNoTag,

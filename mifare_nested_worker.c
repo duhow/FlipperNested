@@ -12,14 +12,6 @@
 
 #define TAG "MifareNestedWorker"
 
-static inline uint64_t bytes2num(const uint8_t* bytes, size_t len) {
-    uint64_t num = 0;
-    for(size_t i = 0; i < len; i++) {
-        num = (num << 8) | bytes[i];
-    }
-    return num;
-}
-
 // possible sum property values
 static uint16_t sums[] =
     {0, 32, 56, 64, 80, 96, 104, 112, 120, 128, 136, 144, 152, 160, 176, 192, 200, 224, 256};

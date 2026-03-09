@@ -5,20 +5,6 @@
 #include "../../lib/crypto1/crypto1.h"
 #define TAG "Nested"
 
-static inline uint64_t bytes2num(const uint8_t* bytes, size_t len) {
-    uint64_t num = 0;
-    for(size_t i = 0; i < len; i++) {
-        num = (num << 8) | bytes[i];
-    }
-    return num;
-}
-
-static inline void num2bytes(uint64_t num, size_t len, uint8_t* bytes) {
-    for(size_t i = 0; i < len; i++) {
-        bytes[len - 1 - i] = (num >> (8 * i)) & 0xFF;
-    }
-}
-
 uint16_t nfca_get_crc16(uint8_t* buff, uint16_t len) {
     uint16_t crc = 0x6363; // NFCA_CRC_INIT
     uint8_t byte = 0;
